@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*.*'
+
+jobs:
+  release:
+    name: Release Job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Extract version from the tag; e.g. if GITHUB_REF is "refs/tags/v0.2.1.0",
+      # this step sets the output "version" to "0.2.1.0".
+      - name: Extract Version
+        id: extract_version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Setup Haskell (Cabal)
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.8.4'
+
+      - name: Cabal Check
+        run: cabal check
+
+      - name: Generate Haddock Documentation
+        run: cabal haddock --haddock-html --haddock-hoogle --builddir=dist/haddock
+
+      - name: Build Source Distribution (Tarball for Hackage)
+        run: cabal sdist
+
+      - name: "Debug: List Documentation Directory"
+        run: |
+          echo "Listing documentation directory contents:"
+          ls -R dist/haddock/build/x86_64-linux/ghc-9.8.4/socket-unix-${{ steps.extract_version.outputs.version }}/doc/html/socket-unix
+
+      - name: Zip Haddock Documentation
+        run: |
+          cd dist/haddock/build/x86_64-linux/ghc-9.8.4/socket-unix-${{ steps.extract_version.outputs.version }}/doc/html/socket-unix
+          echo "Current directory contents before zipping:"
+          ls -la
+          # Zip only the contents of this directory into documentation.zip placed at the repository root.
+          zip -r ../../../../../../../../../documentation.zip .
+
+      - name: Create GitHub Release and Upload Assets
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref }}
+          name: Release ${{ steps.extract_version.outputs.version }}
+          artifacts: |
+            dist-newstyle/sdist/*.tar.gz
+            documentation.zip
+
+      - name: "Debug: List Publish Directory"
+        run: |
+          echo "Listing publish directory contents:"
+          ls -R dist/haddock/build/x86_64-linux/ghc-9.8.4/socket-unix-${{ steps.extract_version.outputs.version }}/doc/html/socket-unix
+
+      - name: Deploy Haddock Documentation to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: dist/haddock/build/x86_64-linux/ghc-9.8.4/socket-unix-${{ steps.extract_version.outputs.version }}/doc/html/socket-unix
+          destination_dir: ${{ steps.extract_version.outputs.version }}
+
+  update-index:
+    name: Update Documentation Index
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+      - name: Set up Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: "Debug: List gh-pages Root"
+        run: |
+          echo "Listing gh-pages branch root:"
+          ls -R
+      - name: Update Documentation Index
+        run: |
+          chmod +x ./scripts/generate-index.sh
+          ./scripts/generate-index.sh
+          echo "After running generate-index.sh, listing files:"
+          ls -la
+          git add index.html
+          if ! git diff --cached --exit-code; then
+            git commit -m "Update documentation index"
+            git push origin gh-pages
+          else
+            echo "No changes to index.html"
+          fi

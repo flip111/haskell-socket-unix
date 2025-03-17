@@ -1,0 +1,40 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ghc: ['8.4.4', '8.6.5', '9.0.2', '9.2.8', '9.4.8', '9.6.6', '9.8.4']
+    env:
+      STACK_YAML: stack-ghc${{ matrix.ghc }}.yaml
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Haskell
+        uses: haskell-actions/setup@v2
+        id: setup-haskell
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          enable-stack: true
+          stack-version: 'latest'
+
+      - name: Cache Haskell Tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.setup-haskell.outputs.stack-root }}
+            .stack-work
+            ~/.ghcup
+          key: ${{ runner.os }}-haskell-${{ matrix.ghc }}-${{ hashFiles(env.STACK_YAML) }}
+          restore-keys: |
+            ${{ runner.os }}-haskell-${{ matrix.ghc }}-
+
+      - name: Build
+        run: stack build --system-ghc
+
+      - name: Test
+        run: stack test

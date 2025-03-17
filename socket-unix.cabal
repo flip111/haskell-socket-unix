@@ -1,19 +1,23 @@
-cabal-version:       3.8
+cabal-version:       2.2
 
 name:                socket-unix
-version:             0.3.0.0
+version:             0.2.1.0
 synopsis:            Unix domain sockets
 description:         A Unix domain socket extension for the socket library
-homepage:            https://github.com/vyacheslavhashov/haskell-socket-unix#readme
+homepage:            https://github.com/flip111/haskell-socket-unix#readme
 license:             MIT
 license-file:        LICENSE
-author:              Vyacheslav Hashov
-maintainer:          vyacheslavhashov@gmail.com
+author:              flip111, Vyacheslav Hashov
+maintainer:          flip101@gmail.com, vyacheslavhashov@gmail.com
 copyright:           2017 Vyacheslav Hashov
 category:            System, Network
 stability:           Experimental
 build-type:          Simple
-extra-source-files:  README.md
+extra-source-files:  README.md CHANGELOG.md
+
+source-repository head
+  type:     git
+  location: https://github.com/flip111/haskell-socket-unix
 
 library
   hs-source-dirs:      src
@@ -25,14 +29,13 @@ library
   other-modules:       System.Socket.Family.Unix.Internal
                        System.Socket.Family.Unix.Platform
   build-depends:
-      base
-    , socket
-    , bytestring
+      base >= 4.11 && < 5
+    , socket == 0.8.3.0
+    , bytestring >= 0.10 && < 0.13
 
   ghc-options:
     -Wall
-    -O2
-  default-language:    GHC2021
+  default-language:    Haskell2010
 
 test-suite default
   type:                exitcode-stdio-1.0
@@ -45,15 +48,15 @@ test-suite default
   other-modules:       Internal
                        Platform
   build-depends:
-      base
-    , socket
+      base >= 4.11 && < 5
+    , socket == 0.8.3.0
     , socket-unix
-    , tasty
-    , tasty-hunit
-    , bytestring
-    , unix
-    , async
-  default-language:    GHC2021
+    , tasty >= 1.1 && < 1.6
+    , tasty-hunit >= 0.10 && < 0.11
+    , bytestring >= 0.10 && < 0.13
+    , unix >= 2.7 && < 2.9
+    , async >= 2.2 && < 2.3
+  default-language:    Haskell2010
 
 test-suite threaded
   type:                exitcode-stdio-1.0
@@ -66,17 +69,13 @@ test-suite threaded
   other-modules:       Internal
                        Platform
   build-depends:
-      base
-    , socket
+      base >= 4.11 && < 5
+    , socket == 0.8.3.0
     , socket-unix
-    , tasty
-    , tasty-hunit
-    , bytestring
-    , unix
-    , async
+    , tasty >= 1.1 && < 1.6
+    , tasty-hunit >= 0.10 && < 0.11
+    , bytestring >= 0.10 && < 0.13
+    , unix >= 2.7 && < 2.9
+    , async >= 2.2 && < 2.3
   ghc-options:         -threaded
-  default-language:    GHC2021
-
-source-repository head
-  type:     git
-  location: https://github.com/vyacheslavhashov/haskell-socket-unix
+  default-language:    Haskell2010
