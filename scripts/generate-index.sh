@@ -1,31 +1,53 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-echo "Generating documentation index..."
+# DEBUG logging function
+debug() {
+  echo "DEBUG: $*" >&2
+}
 
-# Debug: List all directories in the current directory.
-echo "DEBUG: Listing all directories at maxdepth=1:"
-all_dirs=$(find . -maxdepth 1 -type d)
-echo "$all_dirs"
+# Function: get_version_directories
+# Returns all directories in the current folder.
+get_version_directories() {
+  find . -maxdepth 1 -type d
+}
 
-# Filter directories that match a version pattern (e.g., 0.2.1.0).
-echo "DEBUG: Filtering directories matching pattern [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:"
-matching_dirs=$(echo "$all_dirs" | grep -E '^\./[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sed 's|^\./||')
-echo "$matching_dirs"
+# Function: filter_version_directories
+# Filters the list to only include directories matching a four-number version pattern (e.g. 0.2.1.0).
+filter_version_directories() {
+  grep -E '^\./[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sed 's|^\./||'
+}
 
-# Sort the matching directories in version order (descending).
-echo "DEBUG: Sorting version directories in descending order:"
-sorted_versions=$(echo "$matching_dirs" | sort -V -r)
-echo "$sorted_versions"
+# Function: sort_versions
+# Sorts version strings in descending (version) order.
+sort_versions() {
+  sort -V -r
+}
 
-# Store the sorted versions.
-versions="$sorted_versions"
+# Function: find_doc_index
+# Given a version directory, returns the path to the documentation index file.
+# First it checks if "index.html" exists directly in the directory.
+# If not, it searches recursively for a file named "index.html".
+find_doc_index() {
+  local ver="$1"
+  local index_path=""
+  if [ -f "$ver/index.html" ]; then
+    index_path="$ver/index.html"
+  else
+    index_path=$(find "$ver" -type f -name "index.html" | head -n 1)
+  fi
+  echo "$index_path"
+}
 
-# Remove any existing index.html in the current directory (gh-pages branch root)
-rm -f index.html
+# Function: generate_index_html
+# Generates the index.html file using the sorted version directories.
+generate_index_html() {
+  local versions_sorted="$1"
+  # Remove any existing index.html
+  rm -f index.html
 
-# Write the header of the index.html file.
-cat > index.html <<'EOF'
+  # Write the HTML header
+  cat > index.html <<'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,7 +55,7 @@ cat > index.html <<'EOF'
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>haskell-socket-unix Documentation Versions</title>
   <style>
-    /* Base styling with adaptive colors */
+    /* Base styling with adaptive colors and responsive design */
     body {
       margin: 0;
       padding: 20px;
@@ -72,6 +94,7 @@ cat > index.html <<'EOF'
     }
     a {
       text-decoration: none;
+      color: #61dafb;
     }
     a:hover {
       text-decoration: underline;
@@ -82,7 +105,6 @@ cat > index.html <<'EOF'
       text-align: center;
       color: #555;
     }
-    /* Adapt to system preferences */
     @media (prefers-color-scheme: dark) {
       body {
         background-color: #282c34;
@@ -99,7 +121,6 @@ cat > index.html <<'EOF'
         background-color: #4b5263;
       }
     }
-    /* Responsive design tweaks */
     @media (max-width: 600px) {
       h1 {
         font-size: 1.5em;
@@ -123,25 +144,23 @@ cat > index.html <<'EOF'
   <ul>
 EOF
 
-# Loop over each version directory.
-echo "DEBUG: Looping over version directories:" >&2
-for ver in $versions; do
-  echo "DEBUG: Processing version directory: $ver" >&2
-  # Search for the Haddock index file within the version directory.
-  doc_index=$(find "$ver" -type f -path "*/doc/html/socket-unix/index.html" | head -n 1)
-  if [ -n "$doc_index" ]; then
-    # Remove a leading "./" if present to form a relative URL.
-    rel_url=$(echo "$doc_index" | sed 's|^\./||')
-    echo "DEBUG: Found documentation index for $ver at $rel_url" >&2
-    echo "    <li><a href=\"$rel_url\">Documentation for $ver</a></li>" >> index.html
-  else
-    echo "DEBUG: No documentation found for $ver" >&2
-    echo "    <li>$ver: Documentation not found</li>" >> index.html
-  fi
-done
+  # Loop over sorted versions
+  debug "Looping over version directories:"
+  while IFS= read -r ver; do
+    debug "Processing version directory: $ver"
+    local doc_index
+    doc_index=$(find_doc_index "$ver")
+    if [ -n "$doc_index" ]; then
+      debug "Found documentation index for $ver at $doc_index"
+      echo "    <li><a href=\"$doc_index\">Documentation for $ver</a></li>" >> index.html
+    else
+      debug "No documentation found for $ver"
+      echo "    <li>$ver: Documentation not found</li>" >> index.html
+    fi
+  done <<< "$versions_sorted"
 
-# Append the footer of the HTML file.
-cat >> index.html <<'EOF'
+  # Append the footer
+  cat >> index.html <<'EOF'
   </ul>
   <footer>
     <p>&copy; 2025 haskell-socket-unix. Built with love and Haskell.</p>
@@ -149,5 +168,27 @@ cat >> index.html <<'EOF'
 </body>
 </html>
 EOF
+  echo "Documentation index generated successfully at index.html."
+}
 
-echo "Documentation index generated successfully at index.html."
+### Main Execution ###
+
+debug "Starting documentation index generation..."
+
+# Get all directories.
+all_dirs=$(get_version_directories)
+debug "All directories:"
+echo "$all_dirs" >&2
+
+# Filter for version directories.
+matching_dirs=$(echo "$all_dirs" | filter_version_directories)
+debug "Matching version directories:"
+echo "$matching_dirs" >&2
+
+# Sort the matching directories.
+sorted_versions=$(echo "$matching_dirs" | sort_versions)
+debug "Sorted version directories (descending order):"
+echo "$sorted_versions" >&2
+
+# Generate the index.html file using the sorted version directories.
+generate_index_html "$sorted_versions"
