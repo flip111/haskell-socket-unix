@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>haskell-socket-unix Documentation Versions</title>
   <style>
-    /* Base styling */
+    /* Base styling with adaptive colors */
     body {
       margin: 0;
       padding: 20px;
       font-family: "Source Code Pro", monospace;
       line-height: 1.6;
+      background-color: #ffffff;
+      color: #333333;
     }
     h1 {
       margin-bottom: 10px;
@@ -25,7 +27,7 @@
       margin-right: 8px;
       margin-bottom: 8px;
       border-radius: 3px;
-      background-color: #ddd;
+      background-color: #eee;
       color: #333;
       text-decoration: none;
       font-size: 0.9em;
@@ -50,19 +52,9 @@
       margin-top: 40px;
       font-size: 0.8em;
       text-align: center;
+      color: #555;
     }
-    /* Light mode */
-    @media (prefers-color-scheme: light) {
-      body {
-        background-color: #ffffff;
-        color: #333333;
-      }
-      .badge {
-        background-color: #eee;
-        color: #333;
-      }
-    }
-    /* Dark mode */
+    /* Adapt to system preferences */
     @media (prefers-color-scheme: dark) {
       body {
         background-color: #282c34;
@@ -79,7 +71,7 @@
         background-color: #4b5263;
       }
     }
-    /* Responsive tweaks */
+    /* Responsive design tweaks */
     @media (max-width: 600px) {
       h1 {
         font-size: 1.5em;
@@ -89,32 +81,10 @@
         padding: 4px 8px;
       }
     }
-    /* Inline SVG logo styling */
-    .logo {
-      width: 60px;
-      height: auto;
-      vertical-align: middle;
-      margin-right: 10px;
-    }
-    .header-title {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-    }
   </style>
 </head>
 <body>
-  <div class="header-title">
-    <!-- Inline SVG: A Haskell lambda combined with a simple plug icon -->
-    <svg class="logo" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-      <!-- Lambda shape -->
-      <path d="M10,54 L32,10 L54,54 Z" fill="#61dafb"/>
-      <!-- Simple plug element (circle + rectangle) -->
-      <circle cx="32" cy="30" r="4" fill="#282c34"/>
-      <rect x="30" y="34" width="4" height="8" fill="#282c34"/>
-    </svg>
-    <h1>haskell-socket-unix Documentation</h1>
-  </div>
+  <h1>haskell-socket-unix Documentation</h1>
   <div class="badge-bar">
     <a class="badge" href="https://hackage.haskell.org/package/socket-unix">Hackage</a>
     <a class="badge" href="https://github.com/flip111/haskell-socket-unix/blob/master/LICENSE">License MIT</a>
