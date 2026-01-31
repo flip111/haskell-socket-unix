@@ -1,8 +1,8 @@
-resolver: lts-22.43
+resolver: lts-24.29
 
 packages:
-  - '.'
-extra-deps: 
+  - "."
+extra-deps:
   - socket-0.8.3.0
 
 # Override default flag values for local packages and extra-deps

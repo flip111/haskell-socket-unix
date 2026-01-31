@@ -7,7 +7,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ghc: ['8.4.4', '8.6.5', '9.0.2', '9.2.8', '9.4.8', '9.6.6', '9.8.4']
+        ghc:
+          [
+            "8.4.4",
+            "8.6.5",
+            "8.8.4",
+            "8.10.7",
+            "9.0.2",
+            "9.2.8",
+            "9.4.8",
+            "9.6.7",
+            "9.8.4",
+            "9.10.3",
+          ]
     env:
       STACK_YAML: stack-ghc${{ matrix.ghc }}.yaml
     steps:
@@ -20,7 +32,7 @@ jobs:
         with:
           ghc-version: ${{ matrix.ghc }}
           enable-stack: true
-          stack-version: 'latest'
+          stack-version: "latest"
 
       - name: Cache Haskell Tools
         uses: actions/cache@v4
